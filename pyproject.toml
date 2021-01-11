@@ -6,6 +6,7 @@ authors = ["orangain <orangain@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
+Scrapy = "^2.4.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
