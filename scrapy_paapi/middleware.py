@@ -6,7 +6,7 @@ from scrapy.crawler import Crawler
 from scrapy_paapi.constant import HOST_TO_REGIONS
 from scrapy_paapi.signer import get_authorization_headers
 from scrapy_paapi.request import PaapiRequest
-from scrapy_paapi.response import GetBrowseNodesResponse, GetItemsResponse
+from scrapy_paapi.response import GetBrowseNodesResponse, GetItemsResponse, SearchItemsResponse
 
 
 class PaapiMiddleware:
@@ -28,6 +28,7 @@ class PaapiMiddleware:
         o = urlparse(request.url)
         host = o.netloc
         region = HOST_TO_REGIONS[host]
+        request.headers.setdefault("host", host)
 
         auth_headers = get_authorization_headers(
             self._access_key,
@@ -51,5 +52,7 @@ class PaapiMiddleware:
             return response.replace(cls=GetBrowseNodesResponse)
         elif operation == "GetItems":
             return response.replace(cls=GetItemsResponse)
+        elif operation == "SearchItems":
+            return response.replace(cls=SearchItemsResponse)
 
         return response

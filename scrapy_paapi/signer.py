@@ -58,7 +58,12 @@ def get_authorization_headers(
     # Step 4: Create the canonical headers. Header names must be trimmed
     # and lowercase, and sorted in code point order from low to high.
     # Note that there is a trailing \n.
-    sorted_keys = sorted(map(lambda key: key.lower().decode("utf-8"), headers.keys()))
+    sorted_keys = sorted(
+        filter(
+            lambda key: key not in ("authorization", "x-amz-date"),
+            map(lambda key: key.lower().decode("utf-8"), headers.keys()),
+        )
+    )
     sorted_text_headers = {key: headers[key].decode("utf-8") for key in sorted_keys}
     canonical_headers = "".join((f"{key}:{value}\n" for key, value in sorted_text_headers.items()))
 
