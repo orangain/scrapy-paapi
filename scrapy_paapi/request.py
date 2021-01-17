@@ -2,7 +2,11 @@ import json
 from typing import List
 
 from scrapy.http import Request
-from scrapy_paapi.constant import MARKETPLACE_TO_HOSTS, OPERATION_TO_PATHS
+from scrapy_paapi.constant import (
+    MARKETPLACE_TO_HOSTS,
+    OPERATION_TO_PATHS,
+    GET_ITEMS_RESOURCES,
+)
 
 
 class PaapiRequest(Request):
@@ -35,13 +39,16 @@ class PaapiRequest(Request):
         marketplace: str,
         partner_tag: str,
         item_ids: List[str],
-        resources: List[str],
+        resources: List[str] = None,
         **kwargs,
     ):
+        resources = resources or GET_ITEMS_RESOURCES
+        data = {"ItemIds": item_ids, "Resources": resources}
+
         return cls(
-            marketplace,
-            partner_tag,
-            "GetItems",
-            {"ItemIds": item_ids, "Resources": resources},
+            marketplace=marketplace,
+            partner_tag=partner_tag,
+            operation="GetItems",
+            data=data,
             **kwargs,
         )
