@@ -5,8 +5,8 @@ from scrapy.crawler import Crawler
 
 from scrapy_paapi.constant import HOST_TO_REGIONS
 from scrapy_paapi.signer import get_authorization_headers
-
-AMZ_TARGET_PREFIX = b"com.amazon.paapi5.v1.ProductAdvertisingAPIv1."
+from scrapy_paapi.request import PaapiRequest
+from scrapy_paapi.response import GetBrowseNodesResponse, GetItemsResponse
 
 
 class PaapiMiddleware:
@@ -22,11 +22,12 @@ class PaapiMiddleware:
         return cls(access_key=AMAZON_ACCESS_KEY, secret_key=AMAZON_SECRET_KEY)
 
     def process_request(self, request, spider):
+        if not isinstance(request, PaapiRequest):
+            return  # proceed to next middleware
+
         o = urlparse(request.url)
         host = o.netloc
-        region = HOST_TO_REGIONS.get(host)
-        if not region:
-            return  # proceed to next middleware
+        region = HOST_TO_REGIONS[host]
 
         auth_headers = get_authorization_headers(
             self._access_key,
@@ -41,13 +42,14 @@ class PaapiMiddleware:
         request.headers.update(auth_headers)  # Add auth headers
 
     def process_response(self, request, response, spider):
-        amz_target = request.headers.get("X-Amz-Target")
-        if (not amz_target) or (not amz_target.startswith(AMZ_TARGET_PREFIX)):
-            return response
+        if not isinstance(request, PaapiRequest):
+            return response  # non-paapi response
 
-        operation = amz_target[len(AMZ_TARGET_PREFIX) :]
-        if operation == b"GetItems":
-            response.follow_next_page = lambda: None
-            response.items = lambda: response.json()["ItemsResult"]["Items"]
+        operation = request.meta["paapi_operation"]
+
+        if operation == "GetBrowseNodes":
+            return response.replace(cls=GetBrowseNodesResponse)
+        elif operation == "GetItems":
+            return response.replace(cls=GetItemsResponse)
 
         return response

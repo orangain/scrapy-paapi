@@ -5,6 +5,7 @@ from scrapy.http import Request
 from scrapy_paapi.constant import (
     MARKETPLACE_TO_HOSTS,
     OPERATION_TO_PATHS,
+    GET_BROWSE_NODES_RESOURCES,
     GET_ITEMS_RESOURCES,
 )
 
@@ -17,6 +18,7 @@ class PaapiRequest(Request):
         data["PartnerType"] = "Associates"
         data["Marketplace"] = marketplace
         data["Operation"] = operation
+        kwargs.setdefault("meta", {})["paapi_operation"] = operation
 
         super().__init__(
             url=url,
@@ -30,6 +32,33 @@ class PaapiRequest(Request):
                 "Host": host,
                 "X-Amz-Target": f"com.amazon.paapi5.v1.ProductAdvertisingAPIv1.{operation}",
             },
+            **kwargs,
+        )
+
+    @classmethod
+    def get_browse_nodes(
+        cls,
+        marketplace: str,
+        partner_tag: str,
+        browse_node_ids: List[str],
+        resources: List[str] = None,
+        languages_of_preference: List[str] = None,
+        **kwargs,
+    ):
+        """
+        See: https://webservices.amazon.com/paapi5/documentation/getbrowsenodes.html
+        """
+
+        resources = resources or GET_BROWSE_NODES_RESOURCES
+        data = {"BrowseNodeIds": browse_node_ids, "Resources": resources}
+        if languages_of_preference is not None:
+            data["LanguagesOfPreference"] = languages_of_preference
+
+        return cls(
+            marketplace=marketplace,
+            partner_tag=partner_tag,
+            operation="GetBrowseNodes",
+            data=data,
             **kwargs,
         )
 
