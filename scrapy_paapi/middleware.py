@@ -9,7 +9,7 @@ from scrapy_paapi.signer import get_authorization_headers
 AMZ_TARGET_PREFIX = b"com.amazon.paapi5.v1.ProductAdvertisingAPIv1."
 
 
-class Aws4AuthMiddleware:
+class PaapiMiddleware:
     def __init__(self, access_key: str, secret_key: str):
         self._access_key = access_key
         self._secret_key = secret_key
