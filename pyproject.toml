@@ -13,6 +13,7 @@ Scrapy = "^2.4.1"
 pytest = "^4.6"
 flake8 = "^3.8.4"
 black = {version = "^20.8b1", allow-prereleases = true}
+rope = "^0.18.0"
 
 [tool.black]
 line-length = 120
