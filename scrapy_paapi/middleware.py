@@ -39,3 +39,15 @@ class Aws4AuthMiddleware:
             request.body,
         )
         request.headers.update(auth_headers)  # Add auth headers
+
+    def process_response(self, request, response, spider):
+        amz_target = request.headers.get("X-Amz-Target")
+        if (not amz_target) or (not amz_target.startswith(AMZ_TARGET_PREFIX)):
+            return response
+
+        operation = amz_target[len(AMZ_TARGET_PREFIX) :]
+        if operation == b"GetItems":
+            response.follow_next_page = lambda: None
+            response.items = lambda: response.json()["ItemsResult"]["Items"]
+
+        return response
