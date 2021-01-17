@@ -14,12 +14,9 @@ from scrapy_paapi.constant import (
 class PaapiRequest(JsonRequest):
     def __init__(self, *args, **kwargs):
         body_passed = kwargs.get("body", None) is not None
-        data = kwargs.get("data", None)
+        self._parsed_data = json.loads(kwargs["body"]) if body_passed else kwargs.get("data", None)
 
-        if body_passed:
-            data = json.loads(kwargs["body"])
-
-        operation = data["Operation"]
+        operation = self._parsed_data["Operation"]
         kwargs.setdefault("method", "POST")
         kwargs.setdefault("meta", {})["paapi_operation"] = operation
         kwargs.setdefault("headers", {}).update(
@@ -31,6 +28,26 @@ class PaapiRequest(JsonRequest):
         )
 
         super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        if self._parsed_data is None:
+            self._parsed_data = json.loads(self.body)
+
+        non_trivial_data = dict(self._parsed_data)
+        non_trivial_data.pop("Marketplace", None)
+        non_trivial_data.pop("Operation", None)
+        non_trivial_data.pop("PartnerTag", None)
+        non_trivial_data.pop("PartnerType", None)
+        if "Resources" in non_trivial_data:
+            resources = non_trivial_data["Resources"]
+            if len(resources) > 3:
+                non_trivial_data["Resources"] = [resources[0], ..., resources[-1]]
+
+        non_trivial_params = ", ".join(f"{key}={repr(value)}" for key, value in non_trivial_data.items())
+
+        return f"<{self.method} {self.url} {non_trivial_params}>"
+
+    __repr__ = __str__
 
     @classmethod
     def of(cls, marketplace: str, partner_tag: str, operation: str, data: dict, **kwargs):
