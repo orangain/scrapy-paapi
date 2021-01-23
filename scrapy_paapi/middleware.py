@@ -6,7 +6,7 @@ from scrapy.crawler import Crawler
 from scrapy_paapi.constant import HOST_TO_REGIONS
 from scrapy_paapi.signer import get_authorization_headers
 from scrapy_paapi.request import PaapiRequest
-from scrapy_paapi.response import GetBrowseNodesResponse, GetItemsResponse, SearchItemsResponse
+from scrapy_paapi.response import PaapiErrorResponse, GetBrowseNodesResponse, GetItemsResponse, SearchItemsResponse
 
 
 class PaapiMiddleware:
@@ -45,6 +45,9 @@ class PaapiMiddleware:
     def process_response(self, request, response, spider):
         if not isinstance(request, PaapiRequest):
             return response  # non-paapi response
+
+        if response.status >= 400:
+            return response.replace(cls=PaapiErrorResponse)
 
         operation = request.meta["paapi_operation"]
 

@@ -8,6 +8,22 @@ class BasePaapiResponse(TextResponse):
     pass
 
 
+class PaapiErrorResponse(BasePaapiResponse):
+    @property
+    def error_type(self) -> str:
+        return self.json()["__type"]
+
+    @property
+    def errors(self) -> List[dict]:
+        return self.json()["Errors"]
+
+    def __str__(self):
+        error_messages = ", ".join((f"{error['Code']}: {error['Message']}" for error in self.errors))
+        return f"<{self.status} {self.url} {error_messages}>"
+
+    __repr__ = __str__
+
+
 class GetBrowseNodesResponse(BasePaapiResponse):
     @property
     def browse_nodes(self) -> List[dict]:
